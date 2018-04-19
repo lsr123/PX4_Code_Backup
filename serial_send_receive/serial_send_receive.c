@@ -289,13 +289,19 @@ int rw_uart_thread_main(int argc, char *argv[])
     //orb_advert_t rw_uart_sonar_pub = orb_advertise(ORB_ID(rw_uart_sonar), &sonardata);
 
     int count = 0;
-    const char *write_data ="ABCDEFGHIJKLMN";
+    int16_t output_data[3];   // int默认是32位 4个字节
+    output_data[0] = 24567;
+    output_data[1] = 3;
+    output_data[2] = 4;
+    //const char *write_data ="ABCDEFGHIJKLMN";
     //char *write_data_pointer = &write_data;
     while(!thread_should_exit){
-        ///read(uart_read,&data,1);
+        ///read(uart_read,&data,1)
         
-    	write(uart_read, write_data, strlen(write_data));  //write a string through serial nuttx ttyS6, baudrate 115200 
+    	write(uart_read, output_data, sizeof(output_data));  //write a string through serial nuttx ttyS6, baudrate 115200 
 
+        usleep(10000);  //1000000us = 1s
+        
 
         if(data == 'R'){
             /*for(int i = 0;i <4;++i){
