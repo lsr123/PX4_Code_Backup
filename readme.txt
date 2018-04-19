@@ -1,0 +1,1 @@
+serial_send_receive是PX4固件 的一个APP 实现了串口的收发，需在PX4代码中使用。更改编译文件，将app写到
