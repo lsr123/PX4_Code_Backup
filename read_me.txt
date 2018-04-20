@@ -11,5 +11,6 @@ V1.0
 		simulation Pace 模块设置 1 sim sec per sec，采样率1/30
 		Data type模块为int16
 		serial configuration 配置时选择大小端
+V1.1   matlab发送串口，pixhawk接受串口。刚开始正常，后来出现乱码
 		
 				
