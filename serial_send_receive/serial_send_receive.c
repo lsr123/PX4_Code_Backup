@@ -151,6 +151,7 @@ int set_uart_baudrate(const int fd, unsigned int baud)
         case 38400:  speed = B38400;  break;
         case 57600:  speed = B57600;  break;
         case 115200: speed = B115200; break;
+        case 921600: speed = B921600; break;
         default:
            	warnx("ERR: baudrate: %d\n", baud);
             return -EINVAL;
@@ -261,7 +262,7 @@ int rw_uart_thread_main(int argc, char *argv[])
     const char *uart_name = argv[1];    //rw_uart start /dev/ttyS6  启动命令
 
     warnx("[YCM]opening port %s", uart_name);
-    char data = '0';
+    
     //char buffer[5] = "";
     /*
      * TELEM1 : /dev/ttyS1
@@ -272,9 +273,15 @@ int rw_uart_thread_main(int argc, char *argv[])
      * N/A    : /dev/ttyS4
      * IO DEBUG (RX only):/dev/ttyS0
      */
+
+    char data = '0';
+    int16_t read_data[3];
+    int16_t read_head = 0;
+    memset(read_data, 0, sizeof(read_data));
+
     int uart_read = uart_init(uart_name);
     if(false == uart_read)return -1;
-    if(false == set_uart_baudrate(uart_read,115200)){
+    if(false == set_uart_baudrate(uart_read,921600)){
         printf("[YCM]set_uart_baudrate is failed\n");
         return -1;
     }
@@ -290,18 +297,24 @@ int rw_uart_thread_main(int argc, char *argv[])
 
     int count = 0;
     int16_t output_data[3];   // int默认是32位 4个字节
-    output_data[0] = 24567;
+    output_data[0] = 4567;
     output_data[1] = 3;
     output_data[2] = 4;
     //const char *write_data ="ABCDEFGHIJKLMN";
     //char *write_data_pointer = &write_data;
     while(!thread_should_exit){
-        ///read(uart_read,&data,1)
-        
-    	write(uart_read, output_data, sizeof(output_data));  //write a string through serial nuttx ttyS6, baudrate 115200 
+        read(uart_read, &read_head,2);    //read the first int16  two bits
+        if(read_head == 32767)
+        {
+            read(uart_read, read_data, sizeof(read_data));
+        }
 
-        usleep(10000);  //1000000us = 1s
-        
+        memcpy(output_data, read_data, sizeof(output_data));   //read_data to output_data
+    	//write(uart_read, output_data, sizeof(output_data));  //write a string through serial nuttx ttyS6, baudrate 115200 
+        printf("%d %d %d\n", output_data[0], output_data[1], output_data[2]);
+        usleep(10000);  //1000000us = 1s          // receive data rare is 100Hz
+        //printf("%d\n",count++ );
+
 
         if(data == 'R'){
             /*for(int i = 0;i <4;++i){
