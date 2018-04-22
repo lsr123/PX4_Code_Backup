@@ -12,5 +12,11 @@ V1.0
 		Data type模块为int16
 		serial configuration 配置时选择大小端
 V1.1   matlab发送串口，pixhawk接受串口。刚开始正常，后来出现乱码
+
+V1.2    收发不乱码   
+	simulink 发送：
+		将发送的数据转换成int16 。如 32767的十六进制位 7F FF。发送时，先发 FF， 再发7F。
+	PX4接收：
+		每次读8位，以无符号uint8 类型接收。再将两个uint8组合，放到int16类型变量中。此时得到了真实值。
 		
 				

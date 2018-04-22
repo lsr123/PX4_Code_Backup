@@ -276,12 +276,12 @@ int rw_uart_thread_main(int argc, char *argv[])
 
     char data = '0';
     int16_t read_data[3];
-    int16_t read_head = 0;
+    //int16_t read_head = 0;
     memset(read_data, 0, sizeof(read_data));
 
     int uart_read = uart_init(uart_name);
     if(false == uart_read)return -1;
-    if(false == set_uart_baudrate(uart_read,921600)){
+    if(false == set_uart_baudrate(uart_read,9600)){
         printf("[YCM]set_uart_baudrate is failed\n");
         return -1;
     }
@@ -297,25 +297,96 @@ int rw_uart_thread_main(int argc, char *argv[])
 
     int count = 0;
     int16_t output_data[3];   // int默认是32位 4个字节
-    output_data[0] = 4567;
-    output_data[1] = 3;
-    output_data[2] = 4;
+    output_data[0] = 32765;
+    output_data[1] = -3;
+    output_data[2] = -32768;
+
     //const char *write_data ="ABCDEFGHIJKLMN";
     //char *write_data_pointer = &write_data;
+    /*
+    Matlab和代码中发的大小端是不一样的。
+    代码发，simulink接，直接按int16发送接收。
+    simulink发，代码收。发送的是低位前高位后，代码接收后做相应的转换。
+    */
+    uint8_t read_temp;
+    uint8_t buffer[8];
+    //int8_t Lbuff = 0;
+    int i = 0;
+    int16_t a = 0;
+    int16_t b = 0;
+    int16_t c = 0;
     while(!thread_should_exit){
-        read(uart_read, &read_head,2);    //read the first int16  two bits
-        if(read_head == 32767)
-        {
-            read(uart_read, read_data, sizeof(read_data));
-        }
+        //read(uart_read, &read_head,2);    //read the first int16  two bits
+        //if(read_head == 32767)
+        //{
+            //read(uart_read, read_data, sizeof(read_data));
+            //read(uart_read, read_data, 1);
+        
 
-        memcpy(output_data, read_data, sizeof(output_data));   //read_data to output_data
-    	//write(uart_read, output_data, sizeof(output_data));  //write a string through serial nuttx ttyS6, baudrate 115200 
-        printf("%d %d %d\n", output_data[0], output_data[1], output_data[2]);
-        usleep(10000);  //1000000us = 1s          // receive data rare is 100Hz
-        //printf("%d\n",count++ );
+        count ++;
+        //printf("%d\n",count);
+
+            read(uart_read, &read_temp, 1);    //   
+            //printf("%d\n", read_temp);
+            if(read_temp == 255)
+            {
+                //printf("ssssss\n");
+
+                for(i = 0;i<7; i++)
+                {
+                    read(uart_read, &read_temp, 1);
+                    buffer[i] = read_temp;
+                    read_temp = 0;
+                    //printf("%x\n", buffer[i]);
+                }
+                /*Lbuff = buffer[1] & 0x00ff;
+                printf("%d\n", Lbuff);*/
+                //printf("sdfasdfasdf\n");
+                a = (buffer[2]<<8)|buffer[1];
+                b = (buffer[4]<<8)|buffer[3];
+                c = (buffer[6]<<8)|buffer[5];
+                printf("%d %d %d\n", a, b, c);
+
+               /* read(uart_read, &read_temp,1);
+                buffer[0] = read_temp;
+                printf("%d\n", buffer[0]);
+
+                read(uart_read, &read_temp,1);
+                buffer[1] = read_temp;
+                printf("%d\n", buffer[1]);
+
+                read(uart_read, &read_temp,1);
+                buffer[2] = read_temp;
+                printf("%d\n", buffer[2]);*/
+
+            }
+        //}
+            /*if(read_temp == 255)
+            {
+                printf("s");
+                for(int i = 0;i < 5; i++)
+                {
+                    read(uart_read, &read_temp, 1);
+                    buffer[i] = read_temp;
+                    read_temp = 0;
+                }
+                printf("%d\n", buffer[0]);
+                printf("%d\n", buffer[1]);
+                printf("%d\n", buffer[2]);
+                printf("%d\n", buffer[3]);
+                printf("%d\n", buffer[4]);
+            }*/
+           
+
+        //memcpy(output_data, read_data, sizeof(output_data));   //read_data to output_data
+    	write(uart_read, output_data, sizeof(output_data));  //write a string through serial nuttx ttyS6, baudrate 115200 
+        //output_data[1] ++;
+        //printf("%d %d %d\n", (int)output_data[0], (int)output_data[1], (int)output_data[2]);
 
 
+        //printf("%d\n", read_temp);        
+        //usleep(10000);  //1000000us = 1s          // receive data rare is 100Hz
+        
         if(data == 'R'){
             /*for(int i = 0;i <4;++i){
                 read(uart_read,&data,1);
@@ -326,7 +397,7 @@ int rw_uart_thread_main(int argc, char *argv[])
             strncpy(sonardata.datastr,buffer,4);
             sonardata.data = atoi(sonardata.datastr);*/
            
-            printf("%d\n", count);
+            //printf("%d\n", count);
             
             count++;
             //printf("[YCM]sonar.data=%d\n",sonardata.data);
